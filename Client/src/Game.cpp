@@ -101,15 +101,15 @@ void Game::GetOppDataFromServer()
 
         if (len == sizeof(PlayerData))
         {
-            // Ricezione ID e colori assegnati dal server per il player locale
+            
             PlayerData myData;
             std::memcpy(&myData, data, sizeof(PlayerData));
             localPlayer.id = myData.id;
             localPlayer.r = myData.r;
             localPlayer.g = myData.g;
             localPlayer.b = myData.b;
-            std::cout << "Ricevuto ID giocatore: " << localPlayer.id << "\n";
-            continue; // non è lista di altri player
+            
+            continue; 
         }
         else if (len >= sizeof(PlayerData))
         {
@@ -146,5 +146,5 @@ void Game::StopConnection()
     context.stop();
 
     if (receiveThread.joinable())
-        receiveThread.join();  // Unisce il thread
+        receiveThread.join();  
 }
