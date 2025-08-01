@@ -1,6 +1,7 @@
 #include "Game.hpp"
 
 Game::Game()
+    : rng(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()))
 {
     socket = std::make_unique<asio::ip::udp::socket>(context, asio::ip::udp::endpoint(asio::ip::udp::v4(), 0));
     endpoint = asio::ip::udp::endpoint(asio::ip::address::from_string("127.0.0.1"), 9000);
@@ -24,26 +25,17 @@ Game::Game()
     glfwMakeContextCurrent(window);
     glOrtho(-1, 1, -1, 1, -1, 1);
 
-    localPlayer.x = 0.f;
-    localPlayer.y = 0.f;
-    localPlayer.size = 0.1f;
-    localPlayer.r = 255;
-    localPlayer.g = 255;
-    localPlayer.b = 255;
-    localPlayer.id = 0;
+    std::uniform_real_distribution<float> position(-1.f, 1.f);
+
+    localPlayer = { 255, 255, 255, 0, position(rng), position(rng), 0.2 };
 }
 void Game::Run()
 {
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT);
-
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)    localPlayer.y += 0.01f;
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  localPlayer.y -= 0.01f;
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)  localPlayer.x -= 0.01f;
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) localPlayer.x += 0.01f;
-
-        DrawPlayers(localPlayer);
+    
+        GetPlayerInput(localPlayer);
 
         {
             std::lock_guard<std::mutex> lock(playersMutex);
@@ -52,6 +44,8 @@ void Game::Run()
                 DrawPlayers(pdata);
             }
         }
+        DrawPlayers(localPlayer);
+
         SendPlayerDataToServer();
 
         glfwSwapBuffers(window);
@@ -61,6 +55,18 @@ void Game::Run()
     glfwDestroyWindow(window);
     StopConnection();
     glfwTerminate();
+}
+void Game::GetPlayerInput(PlayerData& player)
+{
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)    player.y += 0.01f;
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  player.y -= 0.01f;
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)  player.x -= 0.01f;
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) player.x += 0.01f;
+
+    player.x = std::clamp(player.x, -.9f, .9f);
+    player.y = std::clamp(player.y, -.9f, .9f);
+    // clamp implementation
+    // (player.x < 0) ? 0 : (player.x > 1000) ? 1000 : player.x;
 }
 void Game::DrawPlayers(const PlayerData& data)
 {

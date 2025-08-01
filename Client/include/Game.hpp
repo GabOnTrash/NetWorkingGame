@@ -11,6 +11,7 @@ public:
 
 private:
 
+	void GetPlayerInput(PlayerData& player);
 	void DrawPlayers(const PlayerData& data);
 	void GetOppDataFromServer();
 	void SendPlayerDataToServer();
@@ -26,4 +27,6 @@ private:
 	asio::ip::udp::endpoint endpoint;
 	std::mutex playersMutex;
 	std::thread receiveThread;
+
+	std::mt19937 rng;
 };

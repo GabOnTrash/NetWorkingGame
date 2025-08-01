@@ -33,6 +33,8 @@ void Server::Run()
 
 		if (clients.find(clientEndpoint) == clients.end())
 		{
+			std::uniform_int_distribution<int> dist(50, 255);
+
 			playerId = nextId++;
 			PlayerData newPlayer;
 			newPlayer.id = playerId;
@@ -40,7 +42,6 @@ void Server::Run()
 			newPlayer.y = receivedPlayer.y;
 			newPlayer.size = receivedPlayer.size;
 
-			std::uniform_int_distribution<int> dist(50, 255);
 			newPlayer.r = dist(rng);
 			newPlayer.g = dist(rng);
 			newPlayer.b = dist(rng);
